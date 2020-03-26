@@ -1,3 +1,3 @@
 # bashbunny
 
-Verschiedene Payloads für Den HAK5 Bash Bunny
+Verschiedene Payloads für den HAK5 Bash Bunny
